@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: windows-x64
+            ext: zip
+          - os: macos-14
+            artifact_name: macos-arm64
+            ext: zip
+          - os: macos-15-intel
+            artifact_name: macos-x64
+            ext: zip
+          - os: ubuntu-22.04
+            artifact_name: linux-x86_64
+            ext: tar.gz
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+    
+    - name: Set up Python
+      run: uv python install 3.12
+    
+    - name: Install dependencies
+      run: uv sync --extra build
+    
+    - name: Build with cx_Freeze
+      run: |
+        cd packaging/cxfreeze
+        uv run python setup.py build_exe
+      shell: bash
+    
+    - name: Test self-test
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          exe=$(find packaging/cxfreeze/build -name "Answer.exe" -type f | head -1)
+          "$exe" --self-test
+        else
+          exe=$(find packaging/cxfreeze/build -name "Answer" -type f | head -1)
+          chmod +x "$exe" && "$exe" --self-test
+        fi
+      shell: bash
+    
+    - name: Package (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        $buildDir = Get-ChildItem -Path packaging/cxfreeze/build -Directory | Select-Object -First 1
+        Compress-Archive -Path "$($buildDir.FullName)/*" -DestinationPath "Answer-${{ github.ref_name }}-${{ matrix.artifact_name }}.zip"
+        # Create MSI if possible
+        cd packaging/cxfreeze
+        uv run python setup.py bdist_msi 2>&1 | tail -5
+        $msi = Get-ChildItem -Path dist -Filter "*.msi" | Select-Object -First 1
+        if ($msi) { Copy-Item $msi.FullName "../../Answer-${{ github.ref_name }}-${{ matrix.artifact_name }}.msi" }
+      shell: pwsh
+    
+    - name: Package (macOS)
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        buildDir=$(find packaging/cxfreeze/build -maxdepth 1 -type d | tail -1)
+        cd "$buildDir"
+        zip -r "../../../../Answer-${{ github.ref_name }}-${{ matrix.artifact_name }}.zip" *
+        cd -
+        # Create DMG
+        cd packaging/cxfreeze
+        uv run python setup.py bdist_dmg 2>&1 | tail -10 || true
+        dmg=$(find dist -name "*.dmg" 2>/dev/null | head -1)
+        if [ -n "$dmg" ]; then cp "$dmg" "../../Answer-${{ github.ref_name }}-${{ matrix.artifact_name }}.dmg"; fi
+      shell: bash
+    
+    - name: Package (Linux)
+      if: matrix.os == 'ubuntu-22.04'
+      run: |
+        buildDir=$(find packaging/cxfreeze/build -maxdepth 1 -type d | tail -1)
+        tar -czf "Answer-${{ github.ref_name }}-${{ matrix.artifact_name }}.tar.gz" -C "$(dirname $buildDir)" "$(basename $buildDir)"
+        # Create AppImage
+        cd packaging/cxfreeze
+        uv run python setup.py bdist_appimage 2>&1 | tail -10 || true
+        appimg=$(find dist -name "*.AppImage" 2>/dev/null | head -1)
+        if [ -n "$appimg" ]; then cp "$appimg" "../../Answer-${{ github.ref_name }}-${{ matrix.artifact_name }}.AppImage"; fi
+      shell: bash
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: |
+          Answer-${{ github.ref_name }}-${{ matrix.artifact_name }}.*
+        if-no-files-found: warn
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+    
+    - name: Prepare release files
+      run: |
+        mkdir -p release
+        find artifacts -type f \( -name "*.zip" -o -name "*.msi" -o -name "*.dmg" -o -name "*.tar.gz" -o -name "*.AppImage" \) -exec cp {} release/ \;
+        cd release
+        sha256sum * > SHA256SUMS.txt
+        ls -la
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: release/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
