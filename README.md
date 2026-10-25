@@ -1,3 +1,6 @@
+<img width="30" height="30" alt="Answer_Logo" src="https://github.com/user-attachments/assets/a575e8cd-5d8c-45bd-bcff-5249a10f2b83" />
+
+
 # Answer
 
 Open-source desktop application to generate datasets from documents using AI APIs. Create high-quality training data by transforming PDFs, Word documents, text files, and Markdown into structured datasets.
