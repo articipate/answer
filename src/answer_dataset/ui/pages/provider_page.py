@@ -120,10 +120,11 @@ class ProviderPage(QWidget):
             
             self.model_combo.clear()
             if not models:
-                QMessageBox.warning(self, "Warning", "No models found. You can enter model name manually.")
+                QMessageBox.warning(self, "Warning", "No models found. You can enter model name manually in the combo box.")
                 return
             for m in models:
                 self.model_combo.addItem(m.name, m.id)
+            self.model_combo.setCurrentIndex(0)
             QMessageBox.information(self, "Success", f"Loaded {len(models)} models")
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to fetch models: {e}")
