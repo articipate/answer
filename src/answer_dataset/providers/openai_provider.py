@@ -11,22 +11,29 @@ class OpenAIProvider(BaseProvider):
     
     async def list_models(self) -> List[ModelInfo]:
         try:
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.get(
-                    f"{self.base_url}/models",
-                    headers={"Authorization": f"Bearer {self.api_key}"}
+                    f"{self.base_url.rstrip('/')}/models",
+                    headers=headers
                 )
                 resp.raise_for_status()
                 data = resp.json()
                 models = []
                 for m in data.get("data", []):
-                    models.append(ModelInfo(id=m["id"], name=m["id"]))
+                    model_id = m.get("id") or m.get("name") or ""
+                    if model_id:
+                        models.append(ModelInfo(id=model_id, name=model_id))
                 return sorted(models, key=lambda x: x.id)
         except Exception:
             return []
     
     async def test_connection(self) -> bool:
         try:
+            if not self.api_key and "api.openai.com" in (self.base_url or ""):
+                return False
             models = await self.list_models()
             return len(models) > 0
         except Exception:

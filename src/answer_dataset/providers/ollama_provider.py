@@ -12,16 +12,18 @@ class OllamaProvider(BaseProvider):
     async def list_models(self) -> List[ModelInfo]:
         try:
             # Ollama native API
-            base = self.base_url.replace("/v1", "")
+            base = (self.base_url or "http://localhost:11434/v1").replace("/v1", "").rstrip("/")
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.get(f"{base}/api/tags")
                 resp.raise_for_status()
                 data = resp.json()
                 models = []
                 for m in data.get("models", []):
-                    name = m["name"]
-                    models.append(ModelInfo(id=name, name=name))
-                return models
+                    name = m.get("name") or m.get("model") or ""
+                    if name:
+                        models.append(ModelInfo(id=name, name=name))
+                # Sort by name
+                return sorted(models, key=lambda x: x.name.lower())
         except Exception:
             return []
     
