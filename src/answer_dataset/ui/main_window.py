@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QLabel, QPushButton, QStatusBar, QSplitter)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
+from pathlib import Path
+import sys
 
 from answer_dataset import __app_name__, __version__
 from answer_dataset.ui.pages.provider_page import ProviderPage
@@ -19,9 +21,24 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{__app_name__} v{__version__}")
         self.setMinimumSize(1000, 700)
         self.resize(1200, 800)
+        self._set_icon()
         
         self.setup_ui()
         self.setup_status_bar()
+    
+    def _set_icon(self):
+        candidates = [
+            Path(__file__).parent.parent.parent.parent / "logos" / "Answer_Logo.png",
+            Path(__file__).parent / "resources" / "Answer_Logo.png",
+            Path.cwd() / "logos" / "Answer_Logo.png",
+        ]
+        if getattr(sys, 'frozen', False):
+            candidates.append(Path(sys.executable).parent / "logos" / "Answer_Logo.png")
+            candidates.append(Path(sys.executable).parent / "Answer_Logo.png")
+        for p in candidates:
+            if p.exists():
+                self.setWindowIcon(QIcon(str(p)))
+                break
     
     def setup_ui(self):
         central = QWidget()
