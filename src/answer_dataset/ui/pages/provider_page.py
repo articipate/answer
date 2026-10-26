@@ -141,11 +141,11 @@ class ProviderPage(QWidget):
         
         api_key = self.api_key_edit.text().strip()
         base_url = self.base_url_edit.text().strip()
-        if name != "ollama" and not api_key:
-            QMessageBox.warning(self, "Warning", "API key is required for this provider")
+        if name != "ollama" and (not api_key or len(api_key) < 10 or api_key.lower() in ['test', 'key', 'api']):
+            QMessageBox.warning(self, "Warning", "Valid API key is required for this provider")
             return
-        if name == "ollama" and not base_url:
-            QMessageBox.warning(self, "Warning", "Base URL is required for Ollama")
+        if name == "ollama" and (not base_url or 'localhost' not in base_url and '127.0.0.1' not in base_url):
+            QMessageBox.warning(self, "Warning", "Valid Ollama URL is required")
             return
         
         if api_key:
