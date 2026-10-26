@@ -155,13 +155,18 @@ class MainWindow(QMainWindow):
         
         # Navigation buttons overlay
         self.nav_widget = QWidget(central)
+        self.nav_widget.setAttribute(Qt.WA_TransparentForMouseEvents, False)
         self.nav_widget.setStyleSheet("background: transparent;")
         nav_layout = QHBoxLayout(self.nav_widget)
-        nav_layout.setContentsMargins(10, 0, 10, 10)
+        nav_layout.setContentsMargins(12, 0, 12, 12)
+        nav_layout.setSpacing(8)
+        self.toggle_sidebar_btn = QPushButton("☰")
+        self.toggle_sidebar_btn.setFixedSize(36, 36)
+        self.toggle_sidebar_btn.setToolTip("Toggle Sidebar")
         self.prev_btn = QPushButton("◀ Previous")
         self.next_btn = QPushButton("Next ▶")
-        self.toggle_sidebar_btn = QPushButton("☰")
-        self.toggle_sidebar_btn.setFixedWidth(40)
+        self.prev_btn.setFixedHeight(36)
+        self.next_btn.setFixedHeight(36)
         self.prev_btn.clicked.connect(self.go_prev)
         self.next_btn.clicked.connect(self.go_next)
         self.toggle_sidebar_btn.clicked.connect(self.toggle_sidebar)
@@ -169,13 +174,14 @@ class MainWindow(QMainWindow):
         nav_layout.addStretch()
         nav_layout.addWidget(self.prev_btn)
         nav_layout.addWidget(self.next_btn)
-        self.nav_widget.setGeometry(0, self.height()-50, self.width(), 50)
+        self.nav_widget.setGeometry(0, self.height()-60, self.width(), 60)
         self.nav_widget.raise_()
+        self.nav_widget.show()
     
     def resizeEvent(self, event):
         if hasattr(self, 'nav_widget'):
-            self.nav_widget.setGeometry(0, self.height()-50, self.width(), 50)
-        if hasattr(self, '_splash') and self._splash.isVisible():
+            self.nav_widget.setGeometry(0, self.height()-65, self.width(), 65)
+        if hasattr(self, '_splash') and self._splash and self._splash.isVisible():
             self._splash.setGeometry(0, 0, self.width(), self.height())
         super().resizeEvent(event)
     
