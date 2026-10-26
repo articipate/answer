@@ -159,8 +159,8 @@ class MainWindow(QMainWindow):
         self.nav_widget.setAttribute(Qt.WA_TransparentForMouseEvents, False)
         self.nav_widget.setStyleSheet("background: transparent;")
         nav_layout = QHBoxLayout(self.nav_widget)
-        nav_layout.setContentsMargins(16, 0, 16, 16)
-        nav_layout.setSpacing(10)
+        nav_layout.setContentsMargins(18, 0, 18, 20)
+        nav_layout.setSpacing(12)
         self.toggle_sidebar_btn = QPushButton()
         sidebar_icon = Path("icons/Answer_Sidebar_Icon.png")
         if not sidebar_icon.exists():
@@ -168,17 +168,17 @@ class MainWindow(QMainWindow):
         if sidebar_icon.exists():
             self.toggle_sidebar_btn.setIcon(QIcon(str(sidebar_icon)))
             from PySide6.QtCore import QSize
-            self.toggle_sidebar_btn.setIconSize(QSize(26, 26))
+            self.toggle_sidebar_btn.setIconSize(QSize(28, 28))
         else:
             self.toggle_sidebar_btn.setText("☰")
-        self.toggle_sidebar_btn.setFixedSize(48, 48)
+        self.toggle_sidebar_btn.setFixedSize(56, 56)
         self.toggle_sidebar_btn.setToolTip("Toggle Sidebar")
         self.prev_btn = QPushButton("◀  Previous")
         self.next_btn = QPushButton("Next  ▶")
-        self.prev_btn.setFixedHeight(48)
-        self.next_btn.setFixedHeight(48)
-        self.prev_btn.setStyleSheet("color: #000000;")
-        self.next_btn.setStyleSheet("color: #000000;")
+        self.prev_btn.setFixedHeight(56)
+        self.next_btn.setFixedHeight(56)
+        self.prev_btn.setStyleSheet("color: #000000; font-weight: bold;")
+        self.next_btn.setStyleSheet("color: #000000; font-weight: bold;")
         self.toggle_sidebar_btn.setStyleSheet("color: #000000;")
         self.prev_btn.clicked.connect(self.go_prev)
         self.next_btn.clicked.connect(self.go_next)
@@ -187,13 +187,13 @@ class MainWindow(QMainWindow):
         nav_layout.addStretch()
         nav_layout.addWidget(self.prev_btn)
         nav_layout.addWidget(self.next_btn)
-        self.nav_widget.setGeometry(0, self.height()-90, self.width(), 90)
+        self.nav_widget.setGeometry(0, self.height()-140, self.width(), 140)
         self.nav_widget.raise_()
         self.nav_widget.show()
     
     def resizeEvent(self, event):
         if hasattr(self, 'nav_widget'):
-            self.nav_widget.setGeometry(0, self.height()-90, self.width(), 90)
+            self.nav_widget.setGeometry(0, self.height()-145, self.width(), 145)
         try:
             if hasattr(self, '_splash') and self._splash is not None:
                 if not self._splash.isHidden() and hasattr(self._splash, 'isVisible'):
