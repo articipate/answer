@@ -3,8 +3,8 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QListWidget, QListWidgetItem, QStackedWidget,
                                QLabel, QPushButton, QStatusBar, QDialog,
-                               QGraphicsOpacityEffect)
-from PySide6.QtCore import Qt, QTimer, QPropertyAnimation
+                               QGraphicsOpacityEffect, QFrame)
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QPixmap
 from pathlib import Path
 import sys
@@ -17,26 +17,29 @@ from answer_dataset.ui.pages.generate_page import GeneratePage
 from answer_dataset.ui.theme import apply_theme, get_theme
 
 
-class SplashScreen(QDialog):
-    def __init__(self, logo_path=None):
-        super().__init__()
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(320, 320)
+class SplashOverlay(QWidget):
+    def __init__(self, parent, logo_path=None):
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        theme = get_theme()
+        if theme == "light":
+            self.setStyleSheet("background-color: #f5f5f5;")
+        else:
+            self.setStyleSheet("background-color: #1e1e1e;")
+        self.setGeometry(parent.rect())
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
         layout.setAlignment(Qt.AlignCenter)
         
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignCenter)
         if logo_path and Path(logo_path).exists():
             pixmap = QPixmap(logo_path)
-            pixmap = pixmap.scaled(220, 220, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = pixmap.scaled(260, 260, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.label.setPixmap(pixmap)
         else:
             self.label.setText("Answer")
-            self.label.setStyleSheet("font-size: 36px; font-weight: bold; color: white;")
+            self.label.setStyleSheet("font-size: 42px; font-weight: bold;")
         
         layout.addWidget(self.label)
         
@@ -47,41 +50,34 @@ class SplashScreen(QDialog):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.animate_step)
         self.phase = "down"
-        self.step = 0
         self.cycle = 0
-        self.timer.start(60)
+        self.timer.start(50)
     
     def animate_step(self):
         if self.phase == "down":
-            val = self.opacity.opacity() - 0.08
+            val = self.opacity.opacity() - 0.09
             if val <= 0.35:
                 val = 0.35
                 self.phase = "up"
             self.opacity.setOpacity(val)
         else:
-            val = self.opacity.opacity() + 0.08
+            val = self.opacity.opacity() + 0.09
             if val >= 1.0:
                 val = 1.0
                 self.cycle += 1
                 if self.cycle >= 6:
                     self.timer.stop()
-                    self.accept()
+                    self.close()
+                    self.deleteLater()
                     return
                 self.phase = "down"
             self.opacity.setOpacity(val)
-    
-    def showEvent(self, event):
-        screen = self.screen().geometry()
-        x = (screen.width() - self.width()) // 2
-        y = (screen.height() - self.height()) // 2
-        self.move(x, y)
-        super().showEvent(event)
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"{__app_name__} v{__version__}")
+        self.setWindowTitle(f"{__app_name__} {__version__}")
         self.setMinimumSize(1000, 700)
         self.resize(1200, 800)
         self._logo_path = self._get_logo_path()
@@ -90,7 +86,8 @@ class MainWindow(QMainWindow):
         self.setup_ui()
         self.setup_status_bar()
         self._apply_theme()
-    
+        # Show splash animation on main window
+        QTimer.singleShot(50, self.show_splash_overlay)
     def _get_logo_path(self):
         candidates = [
             Path(__file__).parent.parent.parent.parent / "logos" / "Answer_Logo.png",
@@ -170,5 +167,11 @@ class MainWindow(QMainWindow):
         self.status_label.setText(message)
     
     def show_splash(self):
-        splash = SplashScreen(self._logo_path)
-        splash.exec()
+        splash = SplashOverlay(self, self._logo_path)
+        splash.show()
+        splash.raise_()
+    
+    def show_splash_overlay(self):
+        self._splash = SplashOverlay(self, self._logo_path)
+        self._splash.show()
+        self._splash.raise_()

@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from answer_dataset import __app_name__, __version__
-from answer_dataset.ui.main_window import MainWindow, SplashScreen
+from answer_dataset.ui.main_window import MainWindow
 
 
 def get_logo_path():
@@ -49,10 +49,6 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--self-test":
         print(f"{__app_name__} v{__version__} - self-test OK")
         sys.exit(0)
-    
-    # Show splash animation
-    splash = SplashScreen(logo_path)
-    splash.exec()
     
     window = MainWindow()
     if logo_path:
