@@ -139,9 +139,13 @@ class ProviderPage(QWidget):
         }
         name = provider_map[self.provider_combo.currentText()]
         
-        api_key = self.api_key_edit.text()
+        api_key = self.api_key_edit.text().strip()
+        base_url = self.base_url_edit.text().strip()
         if name != "ollama" and not api_key:
             QMessageBox.warning(self, "Warning", "API key is required for this provider")
+            return
+        if name == "ollama" and not base_url:
+            QMessageBox.warning(self, "Warning", "Base URL is required for Ollama")
             return
         
         if api_key:
@@ -150,7 +154,7 @@ class ProviderPage(QWidget):
         provider = get_provider(
             name,
             api_key=api_key,
-            base_url=self.base_url_edit.text() or "",
+            base_url=base_url or "",
         )
         
         try:
