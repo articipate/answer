@@ -21,25 +21,28 @@ class SplashOverlay(QWidget):
     def __init__(self, parent, logo_path=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, False)
         theme = get_theme()
         if theme == "light":
             self.setStyleSheet("background-color: #f5f5f5;")
         else:
             self.setStyleSheet("background-color: #1e1e1e;")
         self.setGeometry(parent.rect())
+        self.raise_()
         
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(0, 0, 0, 0)
         
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignCenter)
         if logo_path and Path(logo_path).exists():
             pixmap = QPixmap(logo_path)
-            pixmap = pixmap.scaled(260, 260, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = pixmap.scaled(160, 160, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.label.setPixmap(pixmap)
         else:
             self.label.setText("Answer")
-            self.label.setStyleSheet("font-size: 42px; font-weight: bold;")
+            self.label.setStyleSheet("font-size: 28px; font-weight: bold;")
         
         layout.addWidget(self.label)
         
@@ -51,7 +54,7 @@ class SplashOverlay(QWidget):
         self.timer.timeout.connect(self.animate_step)
         self.phase = "down"
         self.cycle = 0
-        self.timer.start(50)
+        self.timer.start(45)
     
     def animate_step(self):
         if self.phase == "down":
@@ -175,3 +178,4 @@ class MainWindow(QMainWindow):
         self._splash = SplashOverlay(self, self._logo_path)
         self._splash.show()
         self._splash.raise_()
+        self._splash.activateWindow()

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "answer-dataset"
-version = "0.1.4"
+version = "0.1.5"
 description = "Open-source desktop app to generate datasets from documents using AI APIs"
 readme = "README.md"
 license = { text = "MIT" }
