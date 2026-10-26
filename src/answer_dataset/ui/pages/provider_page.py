@@ -75,19 +75,22 @@ class ProviderPage(QWidget):
     def on_provider_changed(self):
         provider_map = {
             "OpenAI": ("openai", ""),
-            "Anthropic": ("anthropic", ""),
-            "Google Gemini": ("gemini", ""),
+            "Anthropic": ("anthropic", "https://api.anthropic.com/v1"),
+            "Google Gemini": ("gemini", "https://generativelanguage.googleapis.com/v1beta"),
             "Ollama": ("ollama", "http://localhost:11434/v1"),
             "OpenRouter": ("openrouter", "https://openrouter.ai/api/v1"),
         }
         name, default_url = provider_map[self.provider_combo.currentText()]
-        if not self.base_url_edit.text():
-            self.base_url_edit.setText(default_url)
+        self.base_url_edit.clear()
+        self.base_url_edit.setText(default_url)
+        self.model_combo.clear()
         
         # Load API key from keyring
         key = keyring_store.get_key(name)
         if key:
             self.api_key_edit.setText(key)
+        else:
+            self.api_key_edit.clear()
     
     def refresh_models(self):
         provider_map = {
@@ -99,13 +102,14 @@ class ProviderPage(QWidget):
         }
         name = provider_map[self.provider_combo.currentText()]
         
-        # Save key
-        keyring_store.save_key(name, self.api_key_edit.text())
+        # Save key if provided
+        if self.api_key_edit.text():
+            keyring_store.save_key(name, self.api_key_edit.text())
         
         provider = get_provider(
             name,
             api_key=self.api_key_edit.text(),
-            base_url=self.base_url_edit.text(),
+            base_url=self.base_url_edit.text() or "",
         )
         
         try:
@@ -115,8 +119,13 @@ class ProviderPage(QWidget):
             loop.close()
             
             self.model_combo.clear()
+            if not models:
+                QMessageBox.warning(self, "Warning", "No models found. You can enter model name manually in the combo box.")
+                return
             for m in models:
                 self.model_combo.addItem(m.name, m.id)
+            self.model_combo.setCurrentIndex(0)
+            QMessageBox.information(self, "Success", f"Loaded {len(models)} models")
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to fetch models: {e}")
     
@@ -130,12 +139,22 @@ class ProviderPage(QWidget):
         }
         name = provider_map[self.provider_combo.currentText()]
         
-        keyring_store.save_key(name, self.api_key_edit.text())
+        api_key = self.api_key_edit.text().strip()
+        base_url = self.base_url_edit.text().strip()
+        if name != "ollama" and (not api_key or len(api_key) < 10 or api_key.lower() in ['test', 'key', 'api']):
+            QMessageBox.warning(self, "Warning", "Valid API key is required for this provider")
+            return
+        if name == "ollama" and (not base_url or 'localhost' not in base_url and '127.0.0.1' not in base_url):
+            QMessageBox.warning(self, "Warning", "Valid Ollama URL is required")
+            return
+        
+        if api_key:
+            keyring_store.save_key(name, api_key)
         
         provider = get_provider(
             name,
-            api_key=self.api_key_edit.text(),
-            base_url=self.base_url_edit.text(),
+            api_key=api_key,
+            base_url=base_url or "",
         )
         
         try:
@@ -147,7 +166,7 @@ class ProviderPage(QWidget):
             if success:
                 QMessageBox.information(self, "Success", "Connection successful!")
             else:
-                QMessageBox.warning(self, "Failed", "Connection failed. Check your settings.")
+                QMessageBox.warning(self, "Failed", "Connection failed. Check your API key and settings.")
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Connection error: {e}")
     

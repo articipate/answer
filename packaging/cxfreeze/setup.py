@@ -39,7 +39,10 @@ build_exe_options = {
         "pydoc",
         "doctest",
     ],
-    "include_files": [],
+    "include_files": [
+        (os.path.join("..", "..", "logos", "Answer_Logo.png"), "logos/Answer_Logo.png"),
+        (os.path.join("..", "..", "Answer_Logo.png"), "Answer_Logo.png"),
+    ],
     "zip_include_packages": ["encodings", "PySide6"],
     "zip_exclude_packages": [],
 }

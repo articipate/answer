@@ -2,7 +2,7 @@
 
 import json
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 try:
     from json_repair import repair_json
