@@ -162,9 +162,12 @@ class MainWindow(QMainWindow):
         nav_layout.setSpacing(10)
         self.toggle_sidebar_btn = QPushButton()
         sidebar_icon = Path("icons/Answer_Sidebar_Icon.png")
+        if not sidebar_icon.exists():
+            sidebar_icon = Path("src/answer_dataset/ui/resources/Answer_Sidebar_Icon.png")
         if sidebar_icon.exists():
             self.toggle_sidebar_btn.setIcon(QIcon(str(sidebar_icon)))
-            self.toggle_sidebar_btn.setIconSize(self.toggle_sidebar_btn.size() * 0.6 if False else (24, 24))
+            from PySide6.QtCore import QSize
+            self.toggle_sidebar_btn.setIconSize(QSize(24, 24))
         else:
             self.toggle_sidebar_btn.setText("☰")
         self.toggle_sidebar_btn.setFixedSize(44, 44)
