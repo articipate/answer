@@ -4,7 +4,11 @@ from PySide6.QtWidgets import QApplication
 import json
 from pathlib import Path
 from platformdirs import user_config_dir
-from answer_dataset.ui.color_utils import BUTTON_COLOR, BUTTON_HOVER, BUTTON_PRESSED
+
+# Use fixed accent color from logo
+BUTTON_COLOR = "#0078d4"
+BUTTON_HOVER = "#106ebe"
+BUTTON_PRESSED = "#005a9e"
 
 CONFIG_DIR = Path(user_config_dir("Answer", "Articipate"))
 CONFIG_FILE = CONFIG_DIR / "theme.json"

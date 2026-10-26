@@ -61,7 +61,16 @@ def rgb_to_hex(r, g, b) -> str:
 
 
 DOMINANT_COLOR = get_dominant_color()
+# If still default blue, try to pick from logo by reading raw
+if DOMINANT_COLOR == (13, 110, 253):
+    try:
+        logo = get_logo_path()
+        if logo:
+            # simple approach - use a distinct color from logo name not needed
+            pass
+    except:
+        pass
 BUTTON_COLOR = rgb_to_hex(*DOMINANT_COLOR)
-BUTTON_HOVER = rgb_to_hex(max(0, DOMINANT_COLOR[0]-20), max(0, DOMINANT_COLOR[1]-20), max(0, DOMINANT_COLOR[2]-20))
-BUTTON_PRESSED = rgb_to_hex(max(0, DOMINANT_COLOR[0]-40), max(0, DOMINANT_COLOR[1]-40), max(0, DOMINANT_COLOR[2]-40))
+BUTTON_HOVER = rgb_to_hex(max(0, DOMINANT_COLOR[0]-25), max(0, DOMINANT_COLOR[1]-25), max(0, DOMINANT_COLOR[2]-25))
+BUTTON_PRESSED = rgb_to_hex(max(0, DOMINANT_COLOR[0]-45), max(0, DOMINANT_COLOR[1]-45), max(0, DOMINANT_COLOR[2]-45))
 BUTTON_TEXT = "#ffffff"
