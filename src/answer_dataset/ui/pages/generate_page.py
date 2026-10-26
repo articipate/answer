@@ -24,6 +24,7 @@ class GenerateWorker(QThread):
         super().__init__()
         self.generator = generator
         self.documents = documents
+        self._stopped = False
     
     def run(self):
         try:
@@ -33,19 +34,28 @@ class GenerateWorker(QThread):
                 self.generator.generate(self.documents, self._progress, self._log)
             )
             loop.close()
-            self.finished.emit(rows)
+            if not self._stopped:
+                self.finished.emit(rows)
+            else:
+                self.finished.emit(rows)
         except Exception as e:
-            self.error.emit(str(e))
+            if not self._stopped:
+                self.error.emit(str(e))
     
     def _progress(self, current, total, msg):
-        self.progress.emit(current, total, msg)
+        if not self._stopped:
+            self.progress.emit(current, total, msg)
     
     def _log(self, msg):
-        self.log.emit(msg)
+        if not self._stopped:
+            self.log.emit(msg)
     
     def stop(self):
+        self._stopped = True
         if self.generator:
             self.generator.cancel()
+        if self.isRunning():
+            self.requestInterruption()
 
 
 class GeneratePage(QWidget):
@@ -161,10 +171,11 @@ class GeneratePage(QWidget):
         self.worker.start()
     
     def stop_generation(self):
-        if self.worker:
+        if self.worker and self.worker.isRunning():
             self.worker.stop()
             self.on_log("Stopping generation...")
-    
+            self.stop_btn.setEnabled(False)
+            self.progress_label.setText("Stopping...")
     def on_progress(self, current, total, msg):
         self.progress_bar.setMaximum(total)
         self.progress_bar.setValue(current + 1)
